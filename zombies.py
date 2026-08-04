@@ -90,6 +90,9 @@ class Human(Entity):
        """
        self.image.fill(ZOMBIE_COLOR)
        self.is_zombie = True
+   def turn_into_human(self):
+       self.image.fill(HUMAN_COLOR)
+       self.is_zombie = False
 
 
 # --- Zombie Class ---
@@ -100,6 +103,11 @@ class Zombie(Entity):
    """
    def __init__(self, x, y):
        super().__init__(x, y, ZOMBIE_COLOR)
+       self.is_zombie = True
+   def turn_into_human(self):
+        self.image.fill(HUMAN_COLOR)
+        self.is_zombie = False
+   
 
 # --- Healer Class ---
 class Healer(Entity):
@@ -109,6 +117,8 @@ class Healer(Entity):
     """
     def __init__(self, x, y):
         super().__init__(x,y,HEALER_COLOR)
+        self.is_zombie = False
+
 
 
     
@@ -136,7 +146,7 @@ def main():
 
    # --- Game Setup: Create Initial Entities ---
    # Create initial zombies
-   for _ in range(5): # Start with 10 zombies
+   for _ in range(90): # Start with 90 zombies
        x = random.randint(0, GRID_WIDTH - 1)
        y = random.randint(0, GRID_HEIGHT - 1)
        zombie = Zombie(x, y)
@@ -154,12 +164,12 @@ def main():
 
     
    # Create Healers
-   for _ in range(4): # Start with 4 healers
+   for _ in range(20): # Start with 20 healers
        x = random.randint(0, GRID_WIDTH - 1)
        y = random.randint(0, GRID_HEIGHT - 1)
        healer = Healer(x, y)
        all_entities.add(healer)
-       healers.add(human)
+       healers.add(healer)
 
 
 
@@ -185,7 +195,7 @@ def main():
            # spritecollide returns a list of all sprites in a group that have collided with the given sprite
            # The 'True' argument means that the collided human sprites will be removed from the 'humans' group
            collided_humans = pygame.sprite.spritecollide(zombie, humans, False) # Don't remove immediately
-
+           collided_zombies = pygame.sprite.spritecollide(zombie, healers, False)
 
            for human in collided_humans:
                if not human.is_zombie: # Only infect if the human is not already a zombie
@@ -193,14 +203,21 @@ def main():
                    humans.remove(human)     # Remove from humans group
                    zombies.add(human)       # Add to zombies group (now it's a zombie)
 
-       for healer in collided_zombies:
-        if not zombie.is_human() # Change the zombie's state and color
+           for healer in collided_zombies:
+                if  zombie.is_zombie: # Change the zombies state and color
+                    zombie.turn_into_human() #Remove from zombies group
+                    zombies.remove(zombie)
+                    healers.add(zombie)      # Add to human group(now its a human)
+
+        
+
             
 
 
        # --- Drawing ---
        screen.fill(BACKGROUND_COLOR) # Fill the screen with black each frame
        all_entities.draw(screen)     # Draw all entities to the screen 
+
 
 
        pygame.display.flip() # Update the full display Surface to the screen
